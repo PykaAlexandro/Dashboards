@@ -61,7 +61,7 @@ valueBox(countries, icon = "fa-solid fa-globe", color = "#009e73")
 
 ### Number of Invoices per Day, differentiating by Status {data-width=600}
 
-```{r, fig.width = 8}
+```{r, fig.width = 10}
 library(ggplot2)
 df %>%
   mutate(Status = forcats::fct_rev(if_else(str_detect(Invoice, "C"), "Cancelled", "Confirmed")),
