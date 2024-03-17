@@ -2,5 +2,5 @@ name: ""
 output_dir: 'docs'
 output:
   flexdashboard::flex_dashboard:
-    theme: cerulean
+    theme: cosmo
     highlight: zenburn
