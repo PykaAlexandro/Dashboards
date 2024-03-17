@@ -1,0 +1,4 @@
+name: ""
+output_dir: 'docs'
+output:
+  flexdashboard::flex_dashboard:

@@ -1,0 +1,85 @@
+---
+title: "Basic informations about the cleaned data frame."
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+---
+
+```{r setup, include = FALSE}
+library(flexdashboard)
+library(readxl)
+df <- read_excel(here::here("online_retail_II.xlsx"))
+library(dplyr)
+library(stringr)
+df <- df %>%
+  filter(str_length(StockCode) == 5 |
+           str_detect(StockCode, "^\\d{5}[a-zA-Z]{1,2}$") |
+           str_detect(StockCode, "PADS|DCGS|SP|gift")) %>%
+  filter(Price != 0) %>%
+  mutate(CustomerID = as.character(`Customer ID`),
+         Country = na_if(Country, "Unspecified"), .keep = "unused", .after = Price)
+```
+
+## Row
+
+### Time Span
+
+```{r}
+time_span = paste(max(as.Date(df$InvoiceDate)) - min(as.Date(df$InvoiceDate)), "days")
+valueBox(time_span, icon = "fa-regular fa-calendar-days", color = "#0072b2")
+```
+
+### Invoices
+
+```{r}
+invoices = count(df, wt = n_distinct(Invoice))
+valueBox(invoices, icon = "fa-regular fa-file", color = "#d55e00")
+```
+
+### Rate of Cancellations
+
+```{r}
+valueBox(16.64, icon = "fa-solid fa-percent", color = "#cc79a7")
+```
+
+### Customers
+
+```{r}
+customers = count(df, wt = n_distinct(CustomerID))
+valueBox(customers, icon = "fa-solid fa-user-group", color = "#f0e442")
+```
+
+### Countries
+
+```{r}
+countries = count(df, wt = n_distinct(Country))
+valueBox(countries, icon = "fa-solid fa-globe", color = "#009e73")
+```
+
+## Row
+
+### Number of Invoices per Day, differentiating by Status {data-width=600}
+
+```{r, fig.width = 8}
+library(ggplot2)
+df %>%
+  mutate(Status = forcats::fct_rev(if_else(str_detect(Invoice, "C"), "Cancelled", "Confirmed")),
+         InvoiceDay = as.Date(InvoiceDate)) %>%
+  group_by(InvoiceDay, Status) %>%
+  summarise("Number of Invoices per Day" = n_distinct(Invoice), .groups = "drop") %>%
+  ggplot(aes(InvoiceDay, `Number of Invoices per Day`, linetype = Status)) +
+  geom_line() + 
+  labs(x = NULL,
+       y = NULL, 
+       title = NULL) + 
+  theme(legend.position = "bottom", 
+        legend.title = element_blank())
+```
+
+### Distribution of Customers around the world {data-width=400}
+
+```{r}
+knitr:::kable(df %>%
+                count(Country, wt = n_distinct(CustomerID), sort = TRUE, name = "Number of Customers"))
+```
