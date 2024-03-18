@@ -77,7 +77,7 @@ df %>%
         legend.title = element_blank())
 ```
 
-### Distribution of Customers around the world {data-width=400}
+### Distribution of Customers around the World {data-width=400}
 
 ```{r}
 knitr:::kable(df %>%

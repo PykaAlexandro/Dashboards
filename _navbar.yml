@@ -1,8 +1,10 @@
 name: ""
 title: ""
 left:
-  - text: "Project"
+  - text: "Dashboards"
     menu:
        - text: "Data Presentation"
          href: ./Data_Presentation.html
+       - text: "Insights Presentation"
+         href: ./Insights_Presentation.html
 
