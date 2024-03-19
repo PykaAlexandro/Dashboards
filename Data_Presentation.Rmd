@@ -80,6 +80,6 @@ df %>%
 ### Distribution of Customers around the World {data-width=400}
 
 ```{r}
-knitr:::kable(df %>%
-                count(Country, wt = n_distinct(CustomerID), sort = TRUE, name = "Number of Customers"))
+knitr::kable(df %>%
+               count(Country, wt = n_distinct(CustomerID), sort = TRUE, name = "Number of Customers"))
 ```

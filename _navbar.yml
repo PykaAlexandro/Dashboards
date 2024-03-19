@@ -7,4 +7,6 @@ left:
          href: ./Data_Presentation.html
        - text: "Insights Presentation"
          href: ./Insights_Presentation.html
+       - text: "Inquiries Presentation"
+         href: ./Inquiries_Presentation.html
 

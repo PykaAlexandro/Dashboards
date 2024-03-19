@@ -1,0 +1,170 @@
+---
+title: "Customers Segmentation"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+---
+
+```{r setup, include = FALSE}
+library(flexdashboard)
+library(readxl)
+df <- read_excel(here::here("online_retail_II.xlsx"))
+library(dplyr)
+library(stringr)
+df <- df %>%
+  filter(str_length(StockCode) == 5 |
+           str_detect(StockCode, "^\\d{5}[a-zA-Z]{1,2}$") |
+           str_detect(StockCode, "PADS|DCGS|SP|gift")) %>%
+  filter(Price != 0) %>%
+  mutate(CustomerID = as.character(`Customer ID`),
+         Country = na_if(Country, "Unspecified"), .keep = "unused", .after = Price)
+```
+
+The `6` segments returned by the algorithm differ a lot in terms of number of customers.
+Even if cluster number `1` is by far the most numerous (for the number of invoices as well),
+it is not the one that yields the most revenues, it being number `5`, that is much smaller.
+Segment number `3` is also very interesting: only `2` customers for `6` invoices, but with the
+highest median quantity and median revenues.
+
+## Summary Table {data-height=650}
+
+```{r}
+df <- df %>%
+  filter(!str_starts(Invoice, "C") & 
+           !is.na(CustomerID))
+clustdf <- df %>%
+  mutate(Expenses = Quantity * Price) %>%
+  group_by(CustomerID) %>%
+  summarise("Number of Invoices" = n_distinct(Invoice),
+            "Number of Distinct Items Invoiced" = n_distinct(StockCode),
+            "Total Quantity Purchased" = sum(Quantity),
+            "Total of Expenses" = round(sum(Expenses), 2)) %>%
+  left_join(df %>%
+              mutate(Expenses = Quantity * Price) %>%
+              group_by(CustomerID, Invoice) %>%
+              summarise("Total Quantity per Invoice" = sum(Quantity),
+                        "Total Expenses per Invoice" = sum(Expenses), .groups = "drop_last") %>%
+              summarise("Rounded Median Quantity per Invoice" = round(median(`Total Quantity per Invoice`)),
+                        "Rounded Median Revenues per Invoice" = round(median(`Total Expenses per Invoice`), 2)), by = "CustomerID")
+set.seed(123)
+#we set seeds as k-means may return different results for each run
+clustdf_norm <- scale(clustdf[2:ncol(clustdf)])
+#we z-score normalize the data to not have outliers influence the results
+set.seed(123)
+kmclusters <- kmeans(clustdf_norm, centers = 6)
+clustdf$Segment <- kmclusters$cluster
+```
+```{r}
+library(DT)
+datatable(df %>%
+            left_join(clustdf %>%
+                        select(CustomerID, Segment), by = "CustomerID") %>%
+            mutate(Expenses = Quantity * Price) %>%
+            group_by(Segment) %>%
+            summarise("Number of Customers"= n_distinct(CustomerID),
+                      "Number of Invoices" = n_distinct(Invoice),
+                      "Number of Distinct Items Invoiced" = n_distinct(StockCode),
+                      "Total Quantity Purchased" = sum(Quantity),
+                      "Total of Expenses" = sum(Expenses)) %>%
+            left_join(df %>%
+                        left_join(clustdf %>%
+                                    select(CustomerID, Segment), by = "CustomerID") %>%
+                        mutate(Expenses = Quantity * Price) %>%
+                        group_by(Segment, Invoice) %>%
+                        summarise("Total Quantity per Invoice" = sum(Quantity),
+                                  "Total Expenses per Invoice" = sum(Expenses), .groups = "drop_last") %>%
+                        summarise("Rounded Median Quantity per Invoice" = round(median(`Total Quantity per Invoice`)),
+                                  "Rounded Median Revenues per Invoice" = round(median(`Total Expenses per Invoice`), 2)), by = "Segment"), options = list(dom = 't'), rownames = FALSE) %>%
+  formatRound(columns = "Total of Expenses", digits = 2, interval = 8)
+```
+
+## Row {data-height=350}
+
+### Segment `1` has most of the customers
+
+```{r}
+segment1customersPerc <- df %>%
+  left_join(clustdf %>%
+              select(CustomerID, Segment), by = "CustomerID") %>%
+  group_by(Segment) %>%
+  summarise("Number of Customers"= n_distinct(CustomerID)) %>%
+  mutate(Perc = (`Number of Customers` / sum(`Number of Customers`) * 100)) %>%
+  slice_max(Perc, n = 1) %>%
+  pull()
+gauge(segment1customersPerc, min = 0, max = 100, symbol = '%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39)))
+```
+
+### but only moved around 30% of the Total Quantity
+
+```{r, fig.width = 7}
+# library(ggplot2)
+# df %>%
+#   left_join(clustdf %>%
+#               select(CustomerID, Segment), by = "CustomerID") %>%
+#   group_by(Segment) %>%
+#   summarise("Total Quantity Purchased" = sum(Quantity)) %>%
+#   ggplot(aes(Segment, `Total Quantity Purchased`, fill = ifelse(`Total Quantity Purchased` == max(`Total Quantity Purchased`), "Highlighted", "Normal"))) +
+#   geom_col(show.legend = FALSE) +
+#   scale_fill_manual(values = c("#0072b2", "#999999")) +
+#   geom_text(aes(label = `Total Quantity Purchased`), vjust = -0.5) +
+#   scale_x_continuous(breaks = 1:6) + 
+#   labs(x = NULL,
+#        y = NULL, 
+#        title = NULL) + 
+#   theme(axis.text.y = element_blank(),
+# #        text = element_text(size = 22),
+#         legend.position = "bottom", 
+#         legend.title = element_blank())
+```
+
+
+```{r}
+segment1quantityPerc <- df %>%
+  left_join(clustdf %>%
+              select(CustomerID, Segment), by = "CustomerID") %>%
+  group_by(Segment) %>%
+  summarise("Total Quantity Purchased" = sum(Quantity)) %>%
+  mutate(Perc = (`Total Quantity Purchased` / sum(`Total Quantity Purchased`) * 100)) %>%
+  filter(Segment == 1) %>%
+  pull()
+gauge(segment1quantityPerc, min = 0, max = 100, symbol = '%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39)))
+```
+
+### and of the Total Revenues
+
+```{r, fig.width = 7}
+# df %>%
+#   left_join(clustdf %>%
+#               select(CustomerID, Segment), by = "CustomerID") %>%
+#   mutate(Expenses = Quantity * Price) %>%
+#   group_by(Segment) %>%
+#   summarise("Total of Expenses" = sum(Expenses)) %>%
+#   mutate(Perc = (`Total of Expenses` / sum(`Total of Expenses`) * 100)) %>%
+#   ggplot(aes(Segment, `Total of Expenses`, fill = ifelse(`Total of Expenses` == max(`Total of Expenses`), "Highlighted", "Normal"))) +
+#   geom_col(show.legend = FALSE) +
+#   scale_fill_manual(values = c("#0072b2", "#999999")) +
+#   geom_text(aes(label = `Total of Expenses`), vjust = -0.5) +
+#   scale_x_continuous(breaks = 1:6) + 
+#   labs(x = NULL,
+#        y = NULL, 
+#        title = NULL) + 
+#   theme(axis.text.y = element_blank(),
+# #        text = element_text(size = 22),
+#         legend.position = "bottom", 
+#         legend.title = element_blank())
+```
+
+
+```{r}
+segment1revenuesPerc <- df %>%
+  left_join(clustdf %>%
+              select(CustomerID, Segment), by = "CustomerID") %>%
+  mutate(Expenses = Quantity * Price) %>%
+  group_by(Segment) %>%
+  summarise("Total of Expenses" = sum(Expenses)) %>%
+  mutate(Perc = (`Total of Expenses` / sum(`Total of Expenses`) * 100)) %>%
+  filter(Segment == 1) %>%
+  pull()
+gauge(segment1revenuesPerc, min = 0, max = 100, symbol = '%', gaugeSectors(success = c(80, 100), warning = c(40, 79), danger = c(0, 39)))
+```

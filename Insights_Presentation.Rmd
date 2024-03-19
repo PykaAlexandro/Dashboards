@@ -26,12 +26,12 @@ df <- df %>%
 ### Most Popular Items {data-width=500}
 
 ```{r}
-knitr:::kable(df %>%
-                count(StockCode, Description, sort = TRUE, name = "Number of Occurrences") %>%
-                left_join(df %>%
-                            group_by(StockCode, Description) %>%
-                            summarise("Median Price" = median(Price), .groups = "drop"), by = c("StockCode", "Description")) %>%
-                relocate(`Median Price`, .after = "Description"))
+knitr::kable(df %>%
+               count(StockCode, Description, sort = TRUE, name = "Number of Occurrences") %>%
+               left_join(df %>%
+                           group_by(StockCode, Description) %>%
+                           summarise("Median Price" = median(Price), .groups = "drop"), by = c("StockCode", "Description")) %>%
+               relocate(`Median Price`, .after = "Description"))
 ```
 
 ### Inexpensive Items are More Frequently Sold {data-width=500}
@@ -63,63 +63,27 @@ df %>%
 ```{r}
 df_Customers <- df %>%
   filter(!is.na(CustomerID))
-knitr:::kable(df_Customers %>%
-                filter(!str_starts(Invoice, "C")) %>%
-                mutate(Expense = Quantity * Price) %>%
-                group_by(CustomerID) %>%
-                summarise("Number of Invoices" = n_distinct(Invoice),
-                          "Total of Expenses" = round(sum(Expense), 2)) %>%
-                arrange(desc(`Total of Expenses`)) %>%
-                left_join(df_Customers %>%
-                            filter(!str_starts(Invoice, "C")) %>%
-                            mutate(Month = format(InvoiceDate, "%y/%m")) %>%
-                            group_by(CustomerID, Month) %>%
-                            summarise("Number of Invoices" = n_distinct(Invoice), .groups = "drop") %>%
-                            tidyr::pivot_wider(names_from = Month, values_from = `Number of Invoices`, names_sort = TRUE) %>%
-                            mutate("Number of Missing Months" = rowSums(is.na(pick(everything())))), by = "CustomerID") %>%
-                select(1, last_col(), 2, 3) %>%
-                arrange(`Number of Missing Months`, desc(`Total of Expenses`)))
+knitr::kable(df_Customers %>%
+               filter(!str_starts(Invoice, "C")) %>%
+               mutate(Expense = Quantity * Price) %>%
+               group_by(CustomerID) %>%
+               summarise("Number of Invoices" = n_distinct(Invoice),
+                         "Total of Expenses" = round(sum(Expense), 2)) %>%
+               arrange(desc(`Total of Expenses`)) %>%
+               left_join(df_Customers %>%
+                           filter(!str_starts(Invoice, "C")) %>%
+                           mutate(Month = format(InvoiceDate, "%y/%m")) %>%
+                           group_by(CustomerID, Month) %>%
+                           summarise("Number of Invoices" = n_distinct(Invoice), .groups = "drop") %>%
+                           tidyr::pivot_wider(names_from = Month, values_from = `Number of Invoices`, names_sort = TRUE) %>%
+                           mutate("Number of Missing Months" = rowSums(is.na(pick(everything())))), by = "CustomerID") %>%
+               select(1, last_col(), 2, 3) %>%
+               arrange(`Number of Missing Months`, desc(`Total of Expenses`)))
 ```
 
 ### Unfrequent Buyers still Contribute to the Total Revenues {data-width=600}
 
 ```{r, fig.width=15}
-# df_Customers %>%
-#   filter(!str_starts(Invoice, "C")) %>%
-#   mutate(Expense = Quantity * Price) %>%
-#   group_by(CustomerID) %>%
-#   summarise("Number of Invoices" = n_distinct(Invoice),
-#             "Total of Expenses" = round(sum(Expense), 2)) %>%
-#   slice_max(`Total of Expenses`, n= 10) %>%
-#   ggplot(aes(reorder(CustomerID, `Total of Expenses`), `Number of Invoices`)) +
-#   geom_col()
-# df_Customers %>%
-#   filter(!str_starts(Invoice, "C")) %>%
-#   mutate(Expense = Quantity * Price) %>%
-#   group_by(CustomerID) %>%
-#   summarise("Number of Invoices" = n_distinct(Invoice),
-#             "Total of Expenses" = round(sum(Expense), 2)) %>%
-#   mutate(Perc =`Total of Expenses` / sum(`Total of Expenses`))
-# df_Customers %>%
-#   filter(!str_starts(Invoice, "C")) %>%
-#   mutate(Expense = Quantity * Price) %>%
-#   group_by(CustomerID) %>%
-#   summarise("Number of Invoices" = n_distinct(Invoice),
-#             "Total of Expenses" = round(sum(Expense), 2)) %>%
-#   ggplot(aes(`Total of Expenses`)) +
-#   stat_ecdf()
-# knitr:::kable(df_Customers %>%
-#                 filter(!str_starts(Invoice, "C")) %>%
-#                 mutate(Month = format(InvoiceDate, "%y/%m")) %>%
-#                 group_by(CustomerID, Month) %>%
-#                 summarise("Number of Invoices" = n_distinct(Invoice), .groups = "drop") %>%
-#                 tidyr::pivot_wider(names_from = Month, values_from = `Number of Invoices`, names_sort = TRUE)  %>%
-#                 mutate("Number of Invoices" = rowSums(across(where(is.numeric)), na.rm = TRUE),
-#                        "Rounded Monthly Average" = round(rowMeans(across(where(is.numeric)), na.rm = TRUE), 2),
-#                        "Number of Missing Months" = rowSums(is.na(pick(everything()))), .after = "CustomerID") %>%
-#                 select(1:4) %>%
-#                 filter(`Number of Missing Months` == 0) %>%
-#                 arrange(desc(`Number of Invoices`)))
 df_Customers %>%
   filter(!str_starts(Invoice, "C")) %>%
   mutate(Expense = Quantity * Price) %>%
@@ -142,7 +106,7 @@ df_Customers %>%
   geom_text(aes(label = `Total Rounded Revenues`), vjust = -0.5) +
   labs(x = NULL,
        y = NULL,
-       title = "Total Rounded Revenues per Bracket of Missing Months") +
+       title = "Total Rounded Revenues per Number of Missing Months") +
   theme(axis.text.y = element_blank(),
         text = element_text(size = 22),
         legend.position = "bottom", 
