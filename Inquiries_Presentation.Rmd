@@ -1,5 +1,5 @@
 ---
-title: "Customers Segmentation"
+title: "Customers' Segmentation"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -27,7 +27,7 @@ it is not the one that yields the most revenues, it being number `5`, that is mu
 Segment number `3` is also very interesting: only `2` customers for `6` invoices, but with the
 highest median quantity and median revenues.
 
-## Summary Table {data-height=650}
+## Summary Table {data-height=700}
 
 ```{r}
 df <- df %>%
@@ -79,7 +79,7 @@ datatable(df %>%
   formatRound(columns = "Total of Expenses", digits = 2, interval = 8)
 ```
 
-## Row {data-height=350}
+## Row {data-height=300}
 
 ### Segment `1` has most of the customers
 
@@ -97,28 +97,6 @@ gauge(segment1customersPerc, min = 0, max = 100, symbol = '%', gaugeSectors(succ
 
 ### but only moved around 30% of the Total Quantity
 
-```{r, fig.width = 7}
-# library(ggplot2)
-# df %>%
-#   left_join(clustdf %>%
-#               select(CustomerID, Segment), by = "CustomerID") %>%
-#   group_by(Segment) %>%
-#   summarise("Total Quantity Purchased" = sum(Quantity)) %>%
-#   ggplot(aes(Segment, `Total Quantity Purchased`, fill = ifelse(`Total Quantity Purchased` == max(`Total Quantity Purchased`), "Highlighted", "Normal"))) +
-#   geom_col(show.legend = FALSE) +
-#   scale_fill_manual(values = c("#0072b2", "#999999")) +
-#   geom_text(aes(label = `Total Quantity Purchased`), vjust = -0.5) +
-#   scale_x_continuous(breaks = 1:6) + 
-#   labs(x = NULL,
-#        y = NULL, 
-#        title = NULL) + 
-#   theme(axis.text.y = element_blank(),
-# #        text = element_text(size = 22),
-#         legend.position = "bottom", 
-#         legend.title = element_blank())
-```
-
-
 ```{r}
 segment1quantityPerc <- df %>%
   left_join(clustdf %>%
@@ -132,29 +110,6 @@ gauge(segment1quantityPerc, min = 0, max = 100, symbol = '%', gaugeSectors(succe
 ```
 
 ### and of the Total Revenues
-
-```{r, fig.width = 7}
-# df %>%
-#   left_join(clustdf %>%
-#               select(CustomerID, Segment), by = "CustomerID") %>%
-#   mutate(Expenses = Quantity * Price) %>%
-#   group_by(Segment) %>%
-#   summarise("Total of Expenses" = sum(Expenses)) %>%
-#   mutate(Perc = (`Total of Expenses` / sum(`Total of Expenses`) * 100)) %>%
-#   ggplot(aes(Segment, `Total of Expenses`, fill = ifelse(`Total of Expenses` == max(`Total of Expenses`), "Highlighted", "Normal"))) +
-#   geom_col(show.legend = FALSE) +
-#   scale_fill_manual(values = c("#0072b2", "#999999")) +
-#   geom_text(aes(label = `Total of Expenses`), vjust = -0.5) +
-#   scale_x_continuous(breaks = 1:6) + 
-#   labs(x = NULL,
-#        y = NULL, 
-#        title = NULL) + 
-#   theme(axis.text.y = element_blank(),
-# #        text = element_text(size = 22),
-#         legend.position = "bottom", 
-#         legend.title = element_blank())
-```
-
 
 ```{r}
 segment1revenuesPerc <- df %>%
