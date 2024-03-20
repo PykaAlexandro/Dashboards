@@ -33,7 +33,7 @@ it is not the one that yields the most revenues, it being number `5`, that is mu
 Segment number `3` is also very interesting: only `2` customers for `6` invoices, but with the
 highest median quantity and median revenues.
 
-## Summary Table {data-height=780}
+## Summary Table {data-height=800}
 
 ```{r}
 df <- df %>%
@@ -85,7 +85,7 @@ datatable(df %>%
   formatRound(columns = "Total of Expenses", digits = 2, interval = 8)
 ```
 
-## Row {data-height=220}
+## Row {data-height=200}
 
 ### Segment `1` has most of the customers
 
