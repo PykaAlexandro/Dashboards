@@ -28,7 +28,7 @@ body {
 </style>
 
 The `6` segments returned by the algorithm differ a lot in terms of number of customers.
-Even if cluster number `1` is by far the most numerous (for the number of invoices as well),
+Even if number `1` is by far the most numerous (for the number of invoices as well),
 it is not the one that yields the most revenues, it being number `5`, that is much smaller.
 Segment number `3` is also very interesting: only `2` customers for `6` invoices, but with the
 highest median quantity and median revenues.
